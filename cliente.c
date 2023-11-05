@@ -2,8 +2,7 @@
 #include <curses.h>
 #include <string.h>
 #include <stdlib.h>
-
-#define TAM_NOME_JOGADOR 30 + 1 // + 1 para o \0 no final
+#include "constants.h"
 
 char* obterNomeJogador();
 

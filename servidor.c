@@ -1,8 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-
-#define BANCO_PALAVRAS "banco_palavras.txt"
+#include "constants.h"
 
 char **lerArquivoDeTexto(const char *nomeArquivo, int *numLinhas);
 
