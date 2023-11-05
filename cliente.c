@@ -1,3 +1,9 @@
+/**
+ * Comandos executados:
+ * sudo apt-get install libncurses5-dev libncursesw5-dev // instala o curses.h
+ * gcc cliente.c -o cliente
+ */
+
 #include <stdio.h>
 #include <curses.h>
 #include <string.h>
@@ -134,9 +140,3 @@ void limparBuffers()
     free(palavra);
     fflush(stdin);
 }
-
-/**
- * Comandos executados:
- * sudo apt-get install libncurses5-dev libncursesw5-dev // instala o curses.h
- * gcc cliente.c -o cliente
- */

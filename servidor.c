@@ -1,3 +1,9 @@
+/**
+ * Comandos executados:
+ * sudo apt-get install libncurses5-dev libncursesw5-dev // instala o curses.h
+ * gcc servidor.c -o servidor
+ */
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -86,9 +92,3 @@ char **lerArquivoDeTexto(const char *nomeArquivo, int *numLinhas)
 
     return linhas;
 }
-
-/**
- * Comandos executados:
- * sudo apt-get install libncurses5-dev libncursesw5-dev // instala o curses.h
- * gcc servidor.c -o servidor
- */
