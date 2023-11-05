@@ -13,7 +13,7 @@
 char *obterNomeJogador();
 char *obterPalavraJogador();
 void limparBuffers();
-char *palavra;
+char *palavraEntrada;
 
 int main(int argc, char const *argv[])
 {
@@ -112,31 +112,31 @@ char *obterNomeJogador()
 
 char *obterPalavraJogador()
 {
-    palavra = (char *)malloc((TAM_PALAVRA + 1) * sizeof(char));
-    if (palavra == NULL)
+    palavraEntrada = (char *)malloc((TAM_PALAVRA + 1) * sizeof(char));
+    if (palavraEntrada == NULL)
         printf("Falha na relocação de memória.\n");
 
     while (true)
     {
         printf("Digite a palavra: ");
-        fgets(palavra, (TAM_PALAVRA + 1), stdin);
-        size_t len = strlen(palavra);
-        if (len > 0 && palavra[len - 1] == '\n')
+        fgets(palavraEntrada, (TAM_PALAVRA + 1), stdin);
+        size_t len = strlen(palavraEntrada);
+        if (len > 0 && palavraEntrada[len - 1] == '\n')
         {
-            palavra[len - 1] = '\0'; // Remove a quebra de linha ocasionada pelo Enter
+            palavraEntrada[len - 1] = '\0'; // Remove a quebra de linha ocasionada pelo Enter
             printf("A palavra informada deve conter %d caracteres\n", TAM_PALAVRA);
             continue;
         }
         break;
     }
 
-    return palavra;
+    return palavraEntrada;
 }
 
 void limparBuffers()
 {
     int c;
     while ((c = getchar()) != '\n' && c != EOF);
-    free(palavra);
+    free(palavraEntrada);
     fflush(stdin);
 }
