@@ -7,35 +7,53 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <time.h>
 #include "constants.h"
 
 char **lerArquivoDeTexto(const char *nomeArquivo, int *numLinhas);
+int obterIndicePalavraAleatoria(int qtdPalavras);
 
 int main(int argc, char const *argv[])
 {
-    int numLinhas;
-    char **linhas = lerArquivoDeTexto("banco_palavras_teste.txt", &numLinhas);
+    printf("Iniciando servidor\n");
+    printf("Lendo banco de palavras\n");
 
+    #pragma region Leitura do banco de palavras
+    int numLinhas;
+    char **linhas = lerArquivoDeTexto(BANCO_PALAVRAS, &numLinhas);
+    char lstPalavras[numLinhas][TAM_PALAVRA + 1];
     if (linhas != NULL)
     {
-        printf("Conteúdo do arquivo:\n");
         for (int i = 0; i < numLinhas; i++)
         {
-            for (int j = 0; j < 5; j++)
-            {
-                char caractere = linhas[i][j];
-                printf("%c", caractere);
-            }
-            printf("\n");
-
-            // printf("%s %li", linhas[i], strlen(linhas[i]));
-            free(linhas[i]); // Libera a memória alocada para cada linha
+            strncpy(lstPalavras[i], linhas[i], sizeof(lstPalavras[i]) - 1);
+            lstPalavras[i][sizeof(lstPalavras[i]) - 1] = '\0';
+            free(linhas[i]);
         }
-        free(linhas); // Libera a memória alocada para o array de linhas
-        printf("\nNúmero de palavras lidas: %d\n", numLinhas);
+        free(linhas);
     }
+    #pragma endregion
 
+    printf("Número de palavras: %d\n", numLinhas);
+    printf("Banco de palavras lido\n");
+
+
+
+
+
+
+
+
+    int indiceSorteado = obterIndicePalavraAleatoria(numLinhas);
+    printf("indiceSorteado=%d\n", indiceSorteado);
+    printf("%s\n", lstPalavras[indiceSorteado]);
     return 0;
+}
+
+int obterIndicePalavraAleatoria(int qtdPalavras)
+{
+    srand(time(NULL));
+    return rand() % (qtdPalavras);
 }
 
 char **lerArquivoDeTexto(const char *nomeArquivo, int *numLinhas)
