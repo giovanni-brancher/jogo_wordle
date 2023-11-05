@@ -18,46 +18,92 @@ int main(int argc, char const *argv[])
     // Envia para o servidor
 
     // Servidor recebe
-    char lstPalavras[1][5 + 1];
-    strcpy(lstPalavras[0], "teste");
-    printf("%s\n", lstPalavras[0]); // Servidor tem definido previamente
+    char lstPalavras[2][5 + 1];
+    strcpy(lstPalavras[0], "abano");
+    strcpy(lstPalavras[1], "citar");
+    // printf("%s\n", lstPalavras[0]); // Servidor tem definido previamente
+    // printf("%s\n", lstPalavras[1]); // Servidor tem definido previamente
 
     // Verifica quais letras estao dentro
+
+    int posicaoValidada[5] = {0, 0, 0, 0, 0};
+
+    // Procura posicao e letra certa
     for (int i = 0; i < strlen(palavra); i++)
     {
-        //printf("i=%d\n", i);
-
         if (lstPalavras[0][i] == palavra[i])
         {
-            printf("Letra e posicao certas (%c)\n", palavra[i]);
-            continue; // pula pra prox letra
+            printf("Letra e posicao certas (%d, %c)\n", i, palavra[i]);
+            posicaoValidada[i] = 1;
         }
+    }
 
-        bool existeLetraPalavra = false;
-
-        for (int j = i - 1; j < strlen(lstPalavras[0]); j++)
+    // Procura letra certa e posicao errada nas não validadas ainda
+    printf("Procurando por letras em posicoes erradas\n");
+    for (int i = 0; i < strlen(palavra); i++)
+    {
+        if (posicaoValidada[i] == 0) // Indica que pode ser a letra certa, mas a posição errada após o for anterior
         {
-            if (lstPalavras[0][j] == palavra[i])
+            printf("Possivel candidato (%d, %c)\n", i, palavra[i]);
+            for (int j = 0; j < strlen(lstPalavras[0]); j++)
             {
-                printf("Letra certa, posicao errada (j=%d, %c, %c)\n", j, lstPalavras[0][j], palavra[i]);
-                existeLetraPalavra = true;
-                break; // encontrou a ocorrencia e sai
+                printf("Comparando (%c) == (%c)\n", palavra[i], lstPalavras[0][j]);
+                if (posicaoValidada[j] != 1 && palavra[i] == lstPalavras[0][j])
+                {
+                    printf("Letra certa, posicao errada (j=%d, %c, %c)\n", j, lstPalavras[0][j], palavra[i]);
+                    posicaoValidada[i] = 2; // 2 é aviso
+                }
             }
         }
-
-        if (!existeLetraPalavra) {
-            printf("Nao existe essa letra na palavra secreta (%c)\n", palavra[i]);
-        }
-
-        // printf("lstPalavras[0][%d] = %c\n", i, palavra[i]);
-        // if (palavra[i] == 't') {
-        //     printf("Eh a letra t\n");
-        // }
     }
+
+    // somente para verificar
+    printf("certa = %s, informado = %s\n", lstPalavras[0], palavra);
+    for (int i = 0; i < 5; i++)
+    {
+        printf("%d ", posicaoValidada[i]);
+    }
+    printf("\n");    
+
+    // for (int i = 0; i < strlen(palavra); i++)
+    // {
+
+    //     if (lstPalavras[0][i] == palavra[i])
+    //     {
+    //         printf("Letra e posicao certas (%c)\n", palavra[i]);
+    //         continue; // pula pra prox letra
+    //     }
+
+    //     bool existeLetraPalavra = false;
+    //     // printf("i=%d\n", i);
+
+    //     for (int j = i; j < strlen(lstPalavras[0]); j++)
+    //     {
+    //         printf("j=%d\n", j);
+    //         if (lstPalavras[0][j] == palavra[i])
+    //         {
+    //             printf("Letra certa, posicao errada (j=%d, %c, %c)\n", j, lstPalavras[0][j], palavra[i]);
+    //             existeLetraPalavra = true;
+    //             break; // encontrou a ocorrencia e sai
+    //         }
+    //     }
+
+    //     if (!existeLetraPalavra)
+    //     {
+    //         printf("Nao existe essa letra na palavra secreta (%c)\n", palavra[i]);
+    //     }
+
+    //     // printf("lstPalavras[0][%d] = %c\n", i, palavra[i]);
+    //     // if (palavra[i] == 't') {
+    //     //     printf("Eh a letra t\n");
+    //     // }
+    // }
 
     // free(nomeJogador);
     free(palavra);
     return 0;
+
+    // teste = abnno
 }
 
 char *obterNomeJogador()
