@@ -6,109 +6,85 @@
 
 char *obterNomeJogador();
 char *obterPalavraJogador();
+void limparBuffers();
+char *palavra;
 
 int main(int argc, char const *argv[])
 {
-    // char* nomeJogador = obterNomeJogador();
-    // printf("Nome armazenado: %s\n", nomeJogador);
-
-    // Cliente
-    char *palavra = obterPalavraJogador();
-    printf("%s\n", palavra);
-    // Envia para o servidor
-
-    // Servidor recebe
-    char lstPalavras[2][5 + 1];
+    char *palavraInformada, *nomeJogador;
+    char lstPalavras[2][TAM_PALAVRA + 1];
     strcpy(lstPalavras[0], "abano");
     strcpy(lstPalavras[1], "citar");
-    // printf("%s\n", lstPalavras[0]); // Servidor tem definido previamente
-    // printf("%s\n", lstPalavras[1]); // Servidor tem definido previamente
 
-    // Verifica quais letras estao dentro
+    nomeJogador = obterNomeJogador();
+    printf("Nome obtido: %s\n", nomeJogador);
 
-    int posicaoValidada[5] = {0, 0, 0, 0, 0};
-
-    // Procura posicao e letra certa
-    for (int i = 0; i < strlen(palavra); i++)
+    for (int tentativa = 0; tentativa < NUM_MAX_TENTATIVAS; tentativa++)
     {
-        if (lstPalavras[0][i] == palavra[i])
+        palavraInformada = obterPalavraJogador();
+        printf("Enviando para o servidor: %s\n", palavraInformada);
+        // Envia para o servidor
+
+        int posicaoValidada[TAM_PALAVRA];
+        for (int i = 0; i < TAM_PALAVRA; i++) // Reseta verificações na palavra atual
         {
-            printf("Letra e posicao certas (%d, %c)\n", i, palavra[i]);
-            posicaoValidada[i] = 1;
+            posicaoValidada[i] = 0;
         }
-    }
 
-    // Procura letra certa e posicao errada nas não validadas ainda
-    printf("Procurando por letras em posicoes erradas\n");
-    for (int i = 0; i < strlen(palavra); i++)
-    {
-        if (posicaoValidada[i] == 0) // Indica que pode ser a letra certa, mas a posição errada após o for anterior
+        printf("Verificando letras posicionadas corretamente\n");
+        for (int i = 0; i < strlen(palavraInformada); i++)
         {
-            printf("Possivel candidato (%d, %c)\n", i, palavra[i]);
-            for (int j = 0; j < strlen(lstPalavras[0]); j++)
+            if (lstPalavras[0][i] == palavraInformada[i])
             {
-                printf("Comparando (%c) == (%c)\n", palavra[i], lstPalavras[0][j]);
-                if (posicaoValidada[j] != 1 && palavra[i] == lstPalavras[0][j])
+                printf(">> Letra e posicao certas (%d, %c)\n", i, palavraInformada[i]);
+                posicaoValidada[i] = 1;
+            }
+        }
+
+        printf("Verificando letras corretas fora de posicao\n");
+        for (int i = 0; i < strlen(palavraInformada); i++)
+        {
+            if (posicaoValidada[i] != 1) // Indica que pode ser a letra certa, mas a posição errada após o for anterior
+            {
+                for (int j = 0; j < strlen(lstPalavras[0]); j++)
                 {
-                    printf("Letra certa, posicao errada (j=%d, %c, %c)\n", j, lstPalavras[0][j], palavra[i]);
-                    posicaoValidada[i] = 2; // 2 é aviso
+                    if (posicaoValidada[j] != 1 && palavraInformada[i] == lstPalavras[0][j])
+                    {
+                        printf(">> Letra certa mas posicao errada (%d, %c)\n", j, palavraInformada[i]);
+                        posicaoValidada[i] = 2; // 2 é aviso
+                    }
                 }
             }
         }
+
+        // somente para verificar
+        printf("certa = %s, informado = %s\n", lstPalavras[0], palavraInformada);
+        bool acertouTudo = true;
+        for (int i = 0; i < TAM_PALAVRA; i++)
+        {
+            printf("%d ", posicaoValidada[i]);
+            acertouTudo = acertouTudo && posicaoValidada[i] == 1; // and's para verificar
+        }
+        printf("\n");
+
+        if (acertouTudo)
+        {
+            printf("Você venceu!\n");
+            break;
+        }
+
+        printf("Voce possui %d tentativas ainda\n\n", NUM_MAX_TENTATIVAS - tentativa - 1);
+        limparBuffers();
     }
 
-    // somente para verificar
-    printf("certa = %s, informado = %s\n", lstPalavras[0], palavra);
-    for (int i = 0; i < 5; i++)
-    {
-        printf("%d ", posicaoValidada[i]);
-    }
-    printf("\n");    
-
-    // for (int i = 0; i < strlen(palavra); i++)
-    // {
-
-    //     if (lstPalavras[0][i] == palavra[i])
-    //     {
-    //         printf("Letra e posicao certas (%c)\n", palavra[i]);
-    //         continue; // pula pra prox letra
-    //     }
-
-    //     bool existeLetraPalavra = false;
-    //     // printf("i=%d\n", i);
-
-    //     for (int j = i; j < strlen(lstPalavras[0]); j++)
-    //     {
-    //         printf("j=%d\n", j);
-    //         if (lstPalavras[0][j] == palavra[i])
-    //         {
-    //             printf("Letra certa, posicao errada (j=%d, %c, %c)\n", j, lstPalavras[0][j], palavra[i]);
-    //             existeLetraPalavra = true;
-    //             break; // encontrou a ocorrencia e sai
-    //         }
-    //     }
-
-    //     if (!existeLetraPalavra)
-    //     {
-    //         printf("Nao existe essa letra na palavra secreta (%c)\n", palavra[i]);
-    //     }
-
-    //     // printf("lstPalavras[0][%d] = %c\n", i, palavra[i]);
-    //     // if (palavra[i] == 't') {
-    //     //     printf("Eh a letra t\n");
-    //     // }
-    // }
-
-    // free(nomeJogador);
-    free(palavra);
+    free(nomeJogador);
+    printf("Fim de jogo!\n");
     return 0;
-
-    // teste = abnno
 }
 
 char *obterNomeJogador()
 {
-    char *nome = (char *)malloc(TAM_NOME_JOGADOR * sizeof(char));
+    char *nome = (char *)malloc((TAM_NOME_JOGADOR + 1) * sizeof(char));
     if (nome == NULL)
     {
         fprintf(stderr, "Erro na alocação de memória (Nome)\n");
@@ -116,7 +92,7 @@ char *obterNomeJogador()
     }
 
     printf("Nome do Jogador: ");
-    fgets(nome, TAM_NOME_JOGADOR, stdin);
+    fgets(nome, TAM_NOME_JOGADOR + 1, stdin);
 
     // Remove a quebra de linha ocasionada pelo Enter
     size_t len = strlen(nome);
@@ -130,18 +106,33 @@ char *obterNomeJogador()
 
 char *obterPalavraJogador()
 {
-    char *palavra = (char *)malloc(TAM_PALAVRA * sizeof(char));
-    printf("Digite a palavra: ");
-    fgets(palavra, TAM_PALAVRA, stdin);
+    palavra = (char *)malloc((TAM_PALAVRA + 1) * sizeof(char));
+    if (palavra == NULL)
+        printf("Falha na relocação de memória.\n");
 
-    // Remove a quebra de linha ocasionada pelo Enter
-    size_t len = strlen(palavra);
-    if (len > 0 && palavra[len - 1] == '\n')
+    while (true)
     {
-        palavra[len - 1] = '\0';
+        printf("Digite a palavra: ");
+        fgets(palavra, (TAM_PALAVRA + 1), stdin);
+        size_t len = strlen(palavra);
+        if (len > 0 && palavra[len - 1] == '\n')
+        {
+            palavra[len - 1] = '\0'; // Remove a quebra de linha ocasionada pelo Enter
+            printf("A palavra informada deve conter %d caracteres\n", TAM_PALAVRA);
+            continue;
+        }
+        break;
     }
 
     return palavra;
+}
+
+void limparBuffers()
+{
+    int c;
+    while ((c = getchar()) != '\n' && c != EOF);
+    free(palavra);
+    fflush(stdin);
 }
 
 /**
