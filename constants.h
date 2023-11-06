@@ -3,7 +3,7 @@
 #define TAM_NOME_JOGADOR 30
 #define TAM_PALAVRA 5
 #define IP_SERVIDOR "127.0.0.1"
-#define PORT 9015
+#define PORT 9021
 #define NUM_MAX_CONEXOES 5
 
 struct Partida

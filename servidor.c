@@ -14,6 +14,7 @@
 #include <unistd.h>
 #include <netdb.h>
 #include <curses.h>
+#include <sys/time.h>
 #include "constants.h"
 
 char **lerArquivoDeTexto(const char *nomeArquivo, int *numLinhas);
@@ -39,7 +40,7 @@ int main(int argc, char const *argv[])
         }
         free(linhas);
     }
-    
+
     printf("Número de palavras: %d\n", numLinhas);
     printf("Banco de palavras lido\n");
 
@@ -92,9 +93,15 @@ int main(int argc, char const *argv[])
     printf("%s\n", lstPalavras[indiceSorteado]);
     strcpy(lstPalavras[0], lstPalavras[indiceSorteado]);
 
+    struct timeval tempo_inicial, tempo_final;
+    double tempo_milissegundos;
+
+    int rval = recv(s0, &partida, sizeof(struct Partida), 0);
+    gettimeofday(&tempo_inicial, NULL);
+
     while (1)
     {
-        int rval = recv(s0, &partida, sizeof(struct Partida), 0);
+        gettimeofday(&tempo_final, NULL);
         printf("\nJogador: %s\n", partida.nomeJogador);
         printf("Palavra informada: %s\n", partida.palavraInformada);
         printf("Tempo de partida: %.2f\n", partida.tempo);
@@ -133,6 +140,9 @@ int main(int argc, char const *argv[])
                 posicaoValidadaPtr[i] = posicaoValidada[i];
             }
 
+            partida.tempo = (tempo_final.tv_sec - tempo_inicial.tv_sec) * 1000.0 + (tempo_final.tv_usec - tempo_inicial.tv_usec) / 1000.0;
+            printf("Tempo decorrido: %.2f milissegundos\n", partida.tempo);
+
             rval = send(s0, &partida, sizeof(struct Partida), 0);
             memset(&partida, 0, sizeof(partida)); // limpa memoria alocada
             break;
@@ -155,7 +165,7 @@ int main(int argc, char const *argv[])
         }
 
         // somente para verificar, excluir depois
-        printf("certa = %s, informado = %s\n", lstPalavras[0], partida.palavraInformada);
+        printf("Espectativa = %s, Recebido = %s\n", lstPalavras[0], partida.palavraInformada);
 
         // Retornando validacao (codigo repetido)
         int *posicaoValidadaPtr = partida.posicaoValidada;
@@ -164,17 +174,17 @@ int main(int argc, char const *argv[])
             posicaoValidadaPtr[i] = posicaoValidada[i];
         }
 
+        partida.tempo = (tempo_final.tv_sec - tempo_inicial.tv_sec) * 1000.0 + (tempo_final.tv_usec - tempo_inicial.tv_usec) / 1000.0;
+        printf("Tempo decorrido: %.2f milissegundos\n", partida.tempo);
+
         rval = send(s0, &partida, sizeof(struct Partida), 0);
         memset(&partida, 0, sizeof(partida)); // limpa memoria alocada
+        int rval = recv(s0, &partida, sizeof(struct Partida), 0);
+        // break;
     }
 
     close(s0);
     return 0;
-
-    // int indiceSorteado = obterIndicePalavraAleatoria(numLinhas);
-    // printf("indiceSorteado=%d\n", indiceSorteado);
-    // printf("%s\n", lstPalavras[indiceSorteado]);
-    // return 0;
 }
 
 int obterIndicePalavraAleatoria(int qtdPalavras)

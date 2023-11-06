@@ -42,16 +42,13 @@ int main(int argc, char const *argv[])
         perror("Erro ao conectar ao servidor");
         exit(1);
     }
-
     printf("Conexão estabelecida com o servidor\n");
-    char *nomeJogador = obterNomeJogador();
+
     struct Partida partida;
     memset(&partida, 0, sizeof(partida));
 
-    // Dados da partida
+    char *nomeJogador = obterNomeJogador();
     char *palavraInformada;
-    // char lstPalavras[1][TAM_PALAVRA + 1];
-    // strcpy(lstPalavras[0], "abano");
 
     for (int tentativa = 0; tentativa < NUM_MAX_TENTATIVAS; tentativa++)
     {
@@ -65,7 +62,7 @@ int main(int argc, char const *argv[])
         partida.nomeJogador[sizeof(partida.nomeJogador) - 1] = '\0'; // Certifica-se de terminar a string
 
         // Tempo atual
-        partida.tempo = 50;
+        // partida.tempo = 50;
 
         printf("Verificando palavra\n");
         int rval1 = send(client_socket, &partida, sizeof(struct Partida), 0);
@@ -79,20 +76,22 @@ int main(int argc, char const *argv[])
             printf("%d ", partida.posicaoValidada[i]);
             acertouTudo = acertouTudo && partida.posicaoValidada[i] == 1; // and's para verificar
         }
+        printf("\n");
 
         if (acertouTudo) {
-            printf("\nVoce venceu!\n\n");
+            printf("\nTempo final: %.2f\n", partida.tempo);
+            printf("Voce venceu!\n\n");
             break;
         }
 
-        printf("\nVoce possui %d tentativas restantes\n\n", NUM_MAX_TENTATIVAS - tentativa - 1);
+        printf("Tempo atual: %.2f\n", partida.tempo);
+        printf("Voce possui %d tentativas restantes\n", NUM_MAX_TENTATIVAS - tentativa - 1);
         limparBuffers();
     }
 
     close(client_socket);
     free(nomeJogador);
     printf("Fim de jogo!\n");
-
     return 0;
 }
 
@@ -126,7 +125,7 @@ char *obterPalavraJogador()
 
     while (true)
     {
-        printf("Digite a palavra: ");
+        printf("\nDigite a palavra: ");
         fgets(palavraEntrada, (TAM_PALAVRA + 1), stdin);
         size_t len = strlen(palavraEntrada);
         if (len > 0 && palavraEntrada[len - 1] == '\n')
