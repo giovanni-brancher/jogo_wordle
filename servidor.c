@@ -14,7 +14,6 @@
 #include <unistd.h>
 #include <netdb.h>
 #include <curses.h>
-#include <sys/time.h>
 #include <pthread.h>
 #include "constants.h"
 
@@ -23,9 +22,66 @@ pthread_t esperaJogadores;
 int server_socket, client_address, sock[NUM_MAX_CONEXOES];
 struct sockaddr_in server_address;
 struct PartidaInfo partidaInfo[NUM_MAX_CONEXOES];
+struct RankingJogo rankingJogo[TAM_RANKING];
 
 char **lerArquivoDeTexto(const char *nomeArquivo, int *numLinhas);
 int obterIndicePalavraAleatoria(int qtdPalavras);
+
+void resetRanking()
+{
+    char nomeJogador[TAM_NOME_JOGADOR + 1];
+    char palavraSecreta[TAM_PALAVRA + 1];
+
+    for (int i = 0; i < TAM_RANKING; i++)
+    {
+        strcpy(rankingJogo[i].nomeJogador, "");
+        strcpy(rankingJogo[i].palavraSecreta, "");
+        rankingJogo[i].tempo = 0;
+        rankingJogo[i].tentativa = 0;
+    }
+}
+
+void listarRanking()
+{
+    int numRanking = 1;
+
+    for (int i = TAM_RANKING; i >= 0; i--)
+    {
+        if (rankingJogo[i].tentativa > 0)
+        {
+            printf("\nPosicao %d\n", numRanking);
+            printf("nomeJogador: %s\n", rankingJogo[i].nomeJogador);
+            printf("palavraSecreta: %s\n", rankingJogo[i].palavraSecreta);
+            printf("tempo: %f\n", rankingJogo[i].tempo);
+            printf("tentativa: %d\n", rankingJogo[i].tentativa);
+            numRanking++;
+        }
+    }
+}
+
+// Função para trocar duas structs
+void swap(struct RankingJogo *a, struct RankingJogo *b)
+{
+    struct RankingJogo temp = *a;
+    *a = *b;
+    *b = temp;
+}
+
+// Função para ordenar o array de structs
+void bubbleSort(struct RankingJogo array[], int tamanho)
+{
+    int i, j;
+    for (i = 0; i < tamanho - 1; i++)
+    {
+        for (j = 0; j < tamanho - i - 1; j++)
+        {
+            if (array[j].tempo < array[j + 1].tempo)
+            {
+                swap(&array[j], &array[j + 1]);
+            }
+        }
+    }
+}
 
 void *jogarPartida(void *arg)
 {
@@ -33,13 +89,8 @@ void *jogarPartida(void *arg)
     int contador = 0;
     printf("(Sala %d) Palavra secreta: %s\n", info->id, info->palavraSecreta);
 
-    struct timeval tempo_inicial, tempo_final;
-    double tempo_milissegundos;
-
     struct Partida partida;
     memset(&partida, 0, sizeof(partida));
-
-    gettimeofday(&tempo_inicial, NULL);
 
     while (1)
     {
@@ -50,11 +101,10 @@ void *jogarPartida(void *arg)
             continue; // aguarda ate vir algo
         }
 
-        gettimeofday(&tempo_final, NULL);
         printf("\nJogador: %s\n", partida.nomeJogador);
         printf("Palavra informada: %s\n", partida.palavraInformada);
-        printf("Tempo de partida: %.2f\n", partida.tempo);
-        //sleep(5);
+        printf("Tempo de partida: %f ms\n", partida.tempo);
+        printf("Tentativa: %d\n", partida.tentativa);
 
         int posicaoValidada[TAM_PALAVRA];
         for (int i = 0; i < TAM_PALAVRA; i++) // Reseta verificações na palavra atual
@@ -90,11 +140,8 @@ void *jogarPartida(void *arg)
                 posicaoValidadaPtr[i] = posicaoValidada[i];
             }
 
-            partida.tempo = (tempo_final.tv_sec - tempo_inicial.tv_sec) * 1000.0 + (tempo_final.tv_usec - tempo_inicial.tv_usec) / 1000.0;
-            printf("Tempo decorrido: %.2f milissegundos\n", partida.tempo);
-
             rval = send(sock[info->id], &partida, sizeof(struct Partida), 0);
-            memset(&partida, 0, sizeof(partida)); // limpa memoria alocada
+            // memset(&partida, 0, sizeof(partida)); // limpa memoria alocada
             break;
         }
 
@@ -124,23 +171,56 @@ void *jogarPartida(void *arg)
             posicaoValidadaPtr[i] = posicaoValidada[i];
         }
 
-        partida.tempo = (tempo_final.tv_sec - tempo_inicial.tv_sec) * 1000.0 + (tempo_final.tv_usec - tempo_inicial.tv_usec) / 1000.0;
-        printf("Tempo decorrido: %.2f milissegundos\n", partida.tempo);
+        // printf("Tempo decorrido: %.2f milissegundos\n", partida.tempo);
 
         rval = send(sock[info->id], &partida, sizeof(struct Partida), 0);
         memset(&partida, 0, sizeof(partida)); // limpa memoria alocada
         // rval = recv(sock[info->id], &partida, sizeof(struct Partida), 0);
         // break;
+
+        if (partida.tentativa == 1)
+        {
+            printf("Fim do jogo\n");
+            break;
+        }
     }
+
+    // teste
+    // printf("1>>>>>>>>>>>>>>>> %s\n", partida.nomeJogador);
+
+    // for (int i = 0; i < TAM_RANKING; i++)
+    // {
+    //     if (partida.tempo < rankingJogo[i].tempo && partida.tentativa < rankingJogo[i].tentativa) {
+    //         struct RankingJogo temp;
+    //         strcpy(temp.nomeJogador, rankingJogo[i].nomeJogador);
+    //         strcpy(temp.palavraSecreta, rankingJogo[i].palavraSecreta);
+    //         temp.tempo = rankingJogo[0].tempo;
+    //         temp.tentativa = rankingJogo[0].tentativa;
+
+    //         // salvo na posicao
+    //         strcpy(rankingJogo[0].nomeJogador, partida.nomeJogador);
+    //         strcpy(rankingJogo[0].palavraSecreta, info->palavraSecreta);
+    //         rankingJogo[0].tempo = partida.tempo;
+    //         rankingJogo[0].tentativa = partida.tentativa;
+
+    //         for (int j = 0; i < count; i++)
+    //         {
+    //             /* code */
+    //         }
+
+    //     }
+    // }
+
+    strcpy(rankingJogo[5].nomeJogador, partida.nomeJogador);
+    strcpy(rankingJogo[5].palavraSecreta, info->palavraSecreta);
+    rankingJogo[5].tempo = partida.tempo;
+    rankingJogo[5].tentativa = partida.tentativa;
+
+    int tamanho = sizeof(rankingJogo) / sizeof(rankingJogo[0]);
+    bubbleSort(rankingJogo, tamanho);
+    listarRanking();
 
     close(sock[info->id]);
-
-    while (1)
-    {
-        // printf(">> Partida em execução (t=%d)\n", contador);
-        sleep(1);
-        contador++;
-    }
 }
 
 void *esperarNovosJogadores()
@@ -212,6 +292,8 @@ int main(int argc, char const *argv[])
         perror("Erro ao colocar o socket em modo de escuta\n");
         exit(1);
     }
+
+    resetRanking();
 
     printf("Criando salas...\n");
     for (int i = 0; i < NUM_MAX_CONEXOES; i++)

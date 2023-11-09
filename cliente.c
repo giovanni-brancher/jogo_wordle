@@ -11,12 +11,21 @@
 #include <unistd.h>
 #include <arpa/inet.h>
 #include <sys/socket.h>
+#include <sys/time.h>
+#include <time.h>
 #include "constants.h"
+
+char *palavraEntrada;
+// struct timeval tempo_inicial, tempo_final;
+// float tempo_total;
+
+struct timeval inicio, fim;
+double tempo_decorrido_ms;
 
 char *obterNomeJogador();
 char *obterPalavraJogador();
 void limparBuffers();
-char *palavraEntrada;
+float obterTempoTotal();
 
 int main(int argc, char const *argv[])
 {
@@ -50,16 +59,24 @@ int main(int argc, char const *argv[])
     char *nomeJogador = obterNomeJogador();
     char *palavraInformada;
 
-    for (int tentativa = 0; tentativa < NUM_MAX_TENTATIVAS; tentativa++)
+    // Palavra enviada para conferencia
+    palavraInformada = obterPalavraJogador();
+    bool jogoVencido = false;
+    gettimeofday(&inicio, NULL);
+
+    for (int tentativa = NUM_MAX_TENTATIVAS; tentativa > 0; tentativa--)
     {
-        // Palavra enviada para conferencia
-        palavraInformada = obterPalavraJogador();
         strncpy(partida.palavraInformada, palavraInformada, sizeof(partida.palavraInformada) - 1);
         partida.palavraInformada[sizeof(partida.palavraInformada) - 1] = '\0'; // Certifica-se de terminar a string
 
         // Nome do Jogador
         strncpy(partida.nomeJogador, nomeJogador, sizeof(partida.nomeJogador) - 1);
         partida.nomeJogador[sizeof(partida.nomeJogador) - 1] = '\0'; // Certifica-se de terminar a string
+
+        partida.tentativa = tentativa;
+        gettimeofday(&fim, NULL);
+        partida.tempo = tempo_decorrido_ms = (double)(fim.tv_sec - inicio.tv_sec) * 1000.0 + (double)(fim.tv_usec - inicio.tv_usec) / 1000.0;
+        printf("Tempo = %f ms\n", partida.tempo);
 
         // Tempo atual
         // partida.tempo = 50;
@@ -78,19 +95,26 @@ int main(int argc, char const *argv[])
         }
         printf("\n");
 
-        if (acertouTudo) {
-            printf("\nTempo final: %.2f\n", partida.tempo);
+        if (acertouTudo)
+        {
             printf("Voce venceu!\n\n");
+            jogoVencido = true;
             break;
         }
 
-        printf("Tempo atual: %.2f\n", partida.tempo);
-        printf("Voce possui %d tentativas restantes\n", NUM_MAX_TENTATIVAS - tentativa - 1);
+        if (tentativa - 1 == 0) {
+            break;
+        }
+
+        printf("\nVoce possui %d tentativas restantes\n", tentativa - 1);
         limparBuffers();
+        palavraInformada = obterPalavraJogador();
     }
 
     close(client_socket);
     free(nomeJogador);
+
+    printf("\nTempo final: %f\n", partida.tempo);
     printf("Fim de jogo!\n");
     return 0;
 }
@@ -114,6 +138,8 @@ char *obterNomeJogador()
         nome[len - 1] = '\0';
     }
 
+    printf("\n");
+
     return nome;
 }
 
@@ -125,7 +151,7 @@ char *obterPalavraJogador()
 
     while (true)
     {
-        printf("\nDigite a palavra: ");
+        printf("Digite a palavra: ");
         fgets(palavraEntrada, (TAM_PALAVRA + 1), stdin);
         size_t len = strlen(palavraEntrada);
         if (len > 0 && palavraEntrada[len - 1] == '\n')
